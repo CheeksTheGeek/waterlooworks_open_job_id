@@ -1,6 +1,5 @@
-from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QLineEdit, QPushButton, QWidget, QVBoxLayout, QDialog, QWidgetAction
+from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QLineEdit, QPushButton, QWidget, QVBoxLayout, QWidgetAction
 from PyQt6.QtGui import QIcon, QKeySequence, QAction
-
 from PyQt6.QtCore import Qt
 import webbrowser
 import sys
@@ -17,48 +16,42 @@ class MyLineEdit(QLineEdit):
         else:
             super().keyPressEvent(event)
 
-def show_dialog():
-    dialog = QDialog()
-    layout = QVBoxLayout()
-    
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
+
+    # Create the icon
+    icon = QIcon("icon.png")
+
+    # Create the tray
+    tray = QSystemTrayIcon()
+    tray.setIcon(icon)
+    tray.setVisible(True)
+
+    # Create the menu
+    menu = QMenu()
+
+    # Create QWidgetAction to embed QLineEdit in QMenu
+    widget_action = QWidgetAction(menu)
     global text_field
     text_field = MyLineEdit()
     text_field.setPlaceholderText("Enter Job ID")
-    
+    widget_action.setDefaultWidget(text_field)
+    menu.addAction(widget_action)
+
+    # Add a button to go to the job
+    go_button = QWidgetAction(menu)
     button = QPushButton("Go")
     button.clicked.connect(go_to_job)
-    
-    layout.addWidget(text_field)
-    layout.addWidget(button)
-    
-    dialog.setLayout(layout)
-    dialog.exec()
+    go_button.setDefaultWidget(button)
+    menu.addAction(go_button)
 
-app = QApplication(sys.argv)
-app.setQuitOnLastWindowClosed(False)
+    # Add a Quit option to the menu, also set the shortcut
+    quit_action = QAction("Quit", menu, shortcut=QKeySequence.StandardKey.Quit)
+    quit_action.triggered.connect(app.quit)
+    menu.addAction(quit_action)
 
-# Create the icon
-icon = QIcon("icon.png")
+    # Add the menu to the tray
+    tray.setContextMenu(menu)
 
-# Create the tray
-tray = QSystemTrayIcon()
-tray.setIcon(icon)
-tray.setVisible(True)
-
-# Create the menu
-menu = QMenu()
-
-# Add action to show dialog
-show_action = QAction("Show")
-show_action.triggered.connect(show_dialog)
-menu.addAction(show_action)
-
-# Add a Quit option to the menu, also set the shortcut
-quit_action = QAction("Quit", menu, shortcut=QKeySequence.StandardKey.Quit)
-quit_action.triggered.connect(app.quit)
-menu.addAction(quit_action)
-
-# Add the menu to the tray
-tray.setContextMenu(menu)
-
-app.exec()
+    app.exec()
